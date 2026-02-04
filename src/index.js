@@ -13,9 +13,23 @@ const { UPLOAD_DIR } = require('./middleware/upload');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
-app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+// Allow any localhost (any port) plus optional CORS_ORIGIN list (e.g. production URLs)
+const isLocalOrigin = (origin) =>
+  !origin || /^https?:\/\/localhost(:\d+)?$/i.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/i.test(origin);
+const extraOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (isLocalOrigin(origin)) return cb(null, true);
+    if (extraOrigins.length && origin && extraOrigins.includes(origin)) return cb(null, true);
+    cb(null, false);
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Request logging (frontend traffic)
@@ -56,8 +70,9 @@ app.use((err, req, res, next) => {
 });
 
 // Start server so Render detects a port; DB may connect in background
-app.listen(PORT, () => {
-  console.log(`OpenMarket API listening on port ${PORT}`);
+// Listen on 0.0.0.0 so any host (localhost, LAN IP) can connect
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`OpenMarket API listening on port ${PORT} (all interfaces)`);
   connectDB().catch((err) => {
     console.error('MongoDB connection error:', err.message);
     // Don't exit - server stays up, /api/health will show db: 'disconnected'

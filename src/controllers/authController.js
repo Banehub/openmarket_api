@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const { actionLog } = require('../utils/actionLogger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 
@@ -24,6 +25,7 @@ async function login(req, res) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     const token = signToken(user);
+    actionLog('login', user.email);
     return res.json({ user: userResponse(user), token });
   } catch (err) {
     console.error('Login error:', err.message, err.stack);
@@ -71,6 +73,7 @@ async function register(req, res) {
       bio,
     });
     const token = signToken(user);
+    actionLog('register', `${user.email} (@${finalUsername})`);
     return res.status(201).json({ user: userResponse(user), token });
   } catch (err) {
     return res.status(500).json({ error: err.message });

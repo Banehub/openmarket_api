@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Rating = require('../models/Rating');
+const { actionLog } = require('../utils/actionLogger');
 
 async function getById(req, res) {
   try {
@@ -15,7 +16,7 @@ async function getById(req, res) {
       ]);
       rating = agg[0]?.avg ?? 0;
     }
-    
+
     const out = user.toJSON();
     out.rating = rating;
     return res.json(out);
@@ -66,6 +67,7 @@ async function updateProfile(req, res) {
     }
     const user = await User.findByIdAndUpdate(id, { $set: updates }, { new: true });
     if (!user) return res.status(404).json({ error: 'User not found' });
+    actionLog('profile_updated', `@${req.user.username}`);
     return res.json(user.toJSON());
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -88,6 +90,7 @@ async function changePassword(req, res) {
     }
     user.passwordHash = await bcrypt.hash(newPassword, 10);
     await user.save();
+    actionLog('password_changed', `@${req.user.username}`);
     return res.status(204).send();
   } catch (err) {
     return res.status(500).json({ error: err.message });

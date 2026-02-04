@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Rating = require('../models/Rating');
+const { actionLog } = require('../utils/actionLogger');
 
 function serializeRating(r) {
   const o = { ...r, id: r._id.toString() };
@@ -34,7 +35,7 @@ async function averageSeller(req, res) {
       { $match: { type: 'seller', toUserId: new mongoose.Types.ObjectId(req.params.userId) } },
       { $group: { _id: null, average: { $avg: '$rating' }, count: { $sum: 1 } } },
     ]);
-    
+
     const average = result[0]?.average ?? 0;
     const count = result[0]?.count ?? 0;
     return res.json({ average: Math.round(average * 100) / 100, count });
@@ -84,12 +85,14 @@ async function create(req, res) {
       const existing = await Rating.findOne({ type: 'seller', fromUserId, toUserId });
       if (existing) return res.status(400).json({ error: 'You have already rated this seller' });
       const rating = await Rating.create({ type: 'seller', fromUserId, toUserId, fromUsername, rating: ratingValue, comment });
+      actionLog('rating_left', `@${fromUsername} → seller ${toUserId} (${ratingValue}★)`);
       return res.status(201).json(rating.toJSON());
     } else {
       if (!productId) return res.status(400).json({ error: 'productId required for product rating' });
       const existing = await Rating.findOne({ type: 'product', fromUserId, productId });
       if (existing) return res.status(400).json({ error: 'You have already rated this product' });
       const rating = await Rating.create({ type: 'product', fromUserId, productId, fromUsername, rating: ratingValue, comment });
+      actionLog('rating_left', `@${fromUsername} → product ${productId} (${ratingValue}★)`);
       return res.status(201).json(rating.toJSON());
     }
   } catch (err) {

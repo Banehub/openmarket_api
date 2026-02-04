@@ -32,17 +32,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Request logging (frontend traffic)
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  const method = req.method;
-  const path = req.originalUrl;
-  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
-  const userAgent = req.get('User-Agent') || '-';
-  console.log(`[${timestamp}] ${method} ${path} | IP: ${ip} | ${userAgent}`);
-  next();
-});
-
 app.use('/uploads', express.static(UPLOAD_DIR));
 
 app.use('/api/auth', authRoutes);

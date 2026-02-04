@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Listing = require('../models/Listing');
+const { actionLog } = require('../utils/actionLogger');
 
 const defaultLimit = 50;
 const defaultOffset = 0;
@@ -110,6 +111,7 @@ async function create(req, res) {
       x.seller = { id: x.sellerId._id.toString(), username: x.sellerId.username, verified: x.sellerId.verified, rating: x.sellerId.rating ?? 0 };
       delete x.sellerId;
     }
+    actionLog('listing_added', `"${title}" by @${req.user.username}`);
     return res.status(201).json(x);
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -135,6 +137,7 @@ async function update(req, res) {
       x.seller = { id: x.sellerId._id.toString(), username: x.sellerId.username, verified: x.sellerId.verified, rating: x.sellerId.rating ?? 0 };
       delete x.sellerId;
     }
+    actionLog('listing_updated', `"${listing.title}" by @${req.user.username}`);
     return res.json(x);
   } catch (err) {
     if (err instanceof mongoose.Error.CastError) return res.status(404).json({ error: 'Listing not found' });
@@ -149,7 +152,9 @@ async function remove(req, res) {
     if (listing.sellerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Only the owner can delete this listing' });
     }
+    const title = listing.title;
     await Listing.findByIdAndDelete(req.params.id);
+    actionLog('listing_removed', `"${title}" by @${req.user.username}`);
     return res.status(204).send();
   } catch (err) {
     if (err instanceof mongoose.Error.CastError) return res.status(404).json({ error: 'Listing not found' });

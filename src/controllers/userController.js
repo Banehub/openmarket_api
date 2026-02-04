@@ -15,6 +15,7 @@ async function getById(req, res) {
       ]);
       rating = agg[0]?.avg ?? 0;
     }
+    
     const out = user.toJSON();
     out.rating = rating;
     return res.json(out);

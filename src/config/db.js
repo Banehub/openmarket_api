@@ -13,7 +13,7 @@ async function connectDB() {
     console.log('MongoDB connected to database:', dbName);
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
-    throw err; // Caller can decide whether to exit
+    throw err; 
   }
 }
 

@@ -20,12 +20,13 @@ async function login(req, res) {
       return res.status(400).json({ error: 'Email and password required' });
     }
     const user = await User.findOne({ email }).select('+passwordHash');
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user || !user.passwordHash || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     const token = signToken(user);
     return res.json({ user: userResponse(user), token });
   } catch (err) {
+    console.error('Login error:', err.message, err.stack);
     return res.status(500).json({ error: err.message });
   }
 }

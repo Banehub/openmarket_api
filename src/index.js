@@ -18,6 +18,17 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(express.json());
 
+// Request logging (frontend traffic)
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const path = req.originalUrl;
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  const userAgent = req.get('User-Agent') || '-';
+  console.log(`[${timestamp}] ${method} ${path} | IP: ${ip} | ${userAgent}`);
+  next();
+});
+
 app.use('/uploads', express.static(UPLOAD_DIR));
 
 app.use('/api/auth', authRoutes);
@@ -36,11 +47,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: dbStatus });
 });
 
+// Error logging
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
+  const timestamp = new Date().toISOString();
+  console.error(`[${timestamp}] ERROR on ${req.method} ${req.originalUrl}:`, err.message);
+  if (err.stack) console.error('Stack:', err.stack);
+  res.status(err.status || err.statusCode || 500).json({ error: err.message || 'Internal server error' });
 });
 
-connectDB().then(() => {
-  app.listen(PORT, () => console.log(`OpenMarket API listening on port ${PORT}`));
+// Start server so Render detects a port; DB may connect in background
+app.listen(PORT, () => {
+  console.log(`OpenMarket API listening on port ${PORT}`);
+  connectDB().catch((err) => {
+    console.error('MongoDB connection error:', err.message);
+    // Don't exit - server stays up, /api/health will show db: 'disconnected'
+  });
 });

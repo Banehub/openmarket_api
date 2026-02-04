@@ -1,13 +1,19 @@
 const mongoose = require('mongoose');
 
 async function connectDB() {
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/openmarket';
+  const uri = (process.env.MONGODB_URI || '').trim();
+  if (!uri) {
+    const err = new Error('MONGODB_URI is not set');
+    console.error('DB config error:', err.message);
+    throw err;
+  }
   try {
     await mongoose.connect(uri);
-    console.log('MongoDB connected');
+    const dbName = mongoose.connection.db?.databaseName || 'openmarket';
+    console.log('MongoDB connected to database:', dbName);
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
-    process.exit(1);
+    throw err; // Caller can decide whether to exit
   }
 }
 

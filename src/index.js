@@ -14,17 +14,17 @@ const { UPLOAD_DIR } = require('./middleware/upload');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Allow any localhost (any port) plus optional CORS_ORIGIN list (e.g. production URLs)
+// Allow localhost, production frontend, and optional CORS_ORIGIN list
 const isLocalOrigin = (origin) =>
   !origin || /^https?:\/\/localhost(:\d+)?$/i.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/i.test(origin);
-const extraOrigins = (process.env.CORS_ORIGIN || '')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
+const allowedOrigins = [
+  'https://open-market-frontend.onrender.com',
+  ...(process.env.CORS_ORIGIN || '').split(',').map((o) => o.trim()).filter(Boolean),
+];
 const corsOptions = {
   origin: (origin, cb) => {
     if (isLocalOrigin(origin)) return cb(null, true);
-    if (extraOrigins.length && origin && extraOrigins.includes(origin)) return cb(null, true);
+    if (origin && allowedOrigins.includes(origin)) return cb(null, true);
     cb(null, false);
   },
   credentials: true,

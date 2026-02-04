@@ -15,6 +15,7 @@ const listingSchema = new mongoose.Schema(
 );
 
 listingSchema.methods.toJSON = function () {
+  
   const obj = this.toObject();
   obj.id = obj._id.toString();
   if (obj._id) delete obj._id;

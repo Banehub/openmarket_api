@@ -65,6 +65,16 @@ Frontend can store the token in `localStorage` (e.g. `openmarket_token`) and sen
 
 `Electronics`, `Fashion`, `Furniture`, `Sports`, `Entertainment`, `Books`
 
+## Deploying on Render
+
+- **API service (openmarket-api):**
+  - Uploads are served at **`/uploads/`** on the same host (e.g. `https://openmarket-api-m2lz.onrender.com/uploads/...`). No extra config required; the app uses `express.static` and derives the base URL from the request when `BASE_URL` is not set.
+  - Optionally set **`BASE_URL`** to your API’s public URL (e.g. `https://openmarket-api-m2lz.onrender.com`, no trailing slash) if you want to fix it explicitly.
+- **Frontend service (open-market-frontend):**
+  - In the Render dashboard, set **`VITE_API_BASE_URL`** to your API base URL, e.g. `https://openmarket-api-m2lz.onrender.com/api`.
+  - Redeploy after changing it (Vite bakes env vars at build time).
+- Listing images will then load on the frontend as long as the API serves them at `/uploads/` on the same origin.
+
 ## Notes
 
 - IDs are MongoDB ObjectIds returned as strings in JSON.

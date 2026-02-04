@@ -34,6 +34,7 @@ async function averageSeller(req, res) {
       { $match: { type: 'seller', toUserId: new mongoose.Types.ObjectId(req.params.userId) } },
       { $group: { _id: null, average: { $avg: '$rating' }, count: { $sum: 1 } } },
     ]);
+    
     const average = result[0]?.average ?? 0;
     const count = result[0]?.count ?? 0;
     return res.json({ average: Math.round(average * 100) / 100, count });

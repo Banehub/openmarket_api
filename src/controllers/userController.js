@@ -32,6 +32,7 @@ async function getByUsername(req, res) {
     if (!user) return res.status(404).json({ error: 'User not found' });
     let rating = user.rating;
     if (rating == null || rating === undefined) {
+     
       const agg = await Rating.aggregate([
         { $match: { type: 'seller', toUserId: user._id } },
         { $group: { _id: null, avg: { $avg: '$rating' } } },

@@ -14,9 +14,6 @@ const { UPLOAD_DIR } = require('./middleware/upload');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust proxy so req.protocol/host are correct behind Render/nginx (for upload URLs)
-app.set('trust proxy', 1);
-
 // Allow localhost, production frontend, and optional CORS_ORIGIN list
 const isLocalOrigin = (origin) =>
   !origin || /^https?:\/\/localhost(:\d+)?$/i.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/i.test(origin);
